@@ -20,12 +20,13 @@ public class sessionization {
     private static long inactivity;
     private static Path path;
     private static Map<String, Node> map;
-    private static StringBuilder sb;
+    private static StringBuilder sb, nsb;
     private static DateFormat df;
-    private static int sbCount = 0;
+    private static File outFile;
 
     public static void main (String[] args) {
-        File outFile = new File (System.getProperty("user.dir" )+ "/output/sessionization.txt");
+        nsb = new StringBuilder();
+        outFile = new File (System.getProperty("user.dir" )+ "/output/sessionization.txt");
         map = new HashMap<>();
         try {
             inactivity = setInactivityPeriod();
@@ -57,7 +58,7 @@ public class sessionization {
 
         try(BufferedReader reader = Files.newBufferedReader(path, Charset.forName("UTF-8"))){
             String ss = reader.readLine();
-            System.out.println(ss);
+//            System.out.println(ss);
             String s = null;
             String[] t;
             MinHeap hp = new MinHeap();
@@ -98,11 +99,15 @@ public class sessionization {
                     }
                 }
             }
+
             while(!hp.isEmpty()) {
                 Node nd = hp.remove();
                 map.remove(nd.key);
                 print(nd);
             }
+
+            printToFile (nsb);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {
@@ -113,6 +118,15 @@ public class sessionization {
         Stream<String> stringStream = Files.lines(path, Charset.forName("UTF-8"));
     }
 
+    private static void printToFile(StringBuilder nsb1) {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outFile));
+            bufferedWriter.write(nsb1.toString());
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private static void print(Node nd) {
         sb = new StringBuilder();
         sb.append(nd.key);
@@ -128,22 +142,9 @@ public class sessionization {
         sb.append(dd);
         sb.append(",");
         sb.append(nd.count);
-        sbCount++;
-
-        if (sbCount == 10) {
-            try {
-                writeToFile(sb.toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            sbCount = 0;
-        }
-    }
-
-    private static void writeToFile (String s) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(System.getProperty("user.dir" )+ "/output/sessionization.txt", true));
-        writer.write(s);
-        writer.close();
+        nsb.append(sb.toString());
+        nsb.append("\n");
+//        System.out.println(sb.toString());
     }
 
     private static long convertToMillis(String s, String s1) throws ParseException {
